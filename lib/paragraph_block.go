@@ -9,33 +9,30 @@ type ParagraphBlock struct {
 	InlineText string
 }
 
-func ParseParagraphBlock(line string) (ParagraphBlock, error) {
-	firstLineIndent := regexp.MustCompile("^\\ {0,3}")
+func ParseParagraphBlock(lines []string) (ParagraphBlock, error) {
+	if len(lines) == 0 {
+		return ParagraphBlock{}, BlockNotApplicableError("No content")
+	}
+
+	incorrectFirstLineIndent := regexp.MustCompile("^\\ {4,}")
+	anyIndent := regexp.MustCompile("^\\s*")
+
+	inlineText := ""
 
 	// First line cannot be indented more than three spaces
-	if !firstLineIndent.MatchString(line) {
+	if incorrectFirstLineIndent.MatchString(lines[0]) {
 		return ParagraphBlock{}, BlockNotApplicableError("Incorrect indent")
 	}
 
-	return ParagraphBlock{
-		firstLineIndent.ReplaceAllString(line, ""),
-	}, nil
-}
+	inlineText += anyIndent.ReplaceAllString(lines[0], "")
 
-func (pb ParagraphBlock) ParseNext(line string) (Block, bool, error) {
-	anyIndent := regexp.MustCompile("^\\s*")
-
-	// Lines after the first may be indented any amount
-	// http://spec.commonmark.org/0.26/#example-184
-	line = anyIndent.ReplaceAllString(line, "")
-
-	pb.InlineText += fmt.Sprintf(" %s", line)
-
-	if line == "" {
-		return pb, false, nil
-	} else {
-		return pb, true, nil
+	for _, line := range lines[1:len(lines)] {
+		inlineText += " " + anyIndent.ReplaceAllString(line, "")
 	}
+
+	return ParagraphBlock{
+		inlineText,
+	}, nil
 }
 
 func (pb ParagraphBlock) Render() string {

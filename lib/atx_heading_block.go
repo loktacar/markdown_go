@@ -1,8 +1,8 @@
 package markdown
 
 import (
-	"fmt"
-	"regexp"
+//"fmt"
+//"regexp"
 )
 
 type AtxHeadingBlock struct {
